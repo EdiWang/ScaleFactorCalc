@@ -1,3 +1,66 @@
 ﻿@page "/"
+@using System.ComponentModel.DataAnnotations
 
 TODO
+
+@code {
+    // 自主研发 https://anduin.aiursoft.cn/post/2023/10/11/select-display
+
+    class DisplayInfo
+    {
+        [Required]
+        [MinLength(800)]
+        [MaxLength(10240)]
+        public int PixelX { get; set; } = 1920;
+
+        [Required]
+        [MinLength(600)]
+        [MaxLength(20480)]
+        public int PixelY { get; set; } = 1080;
+
+        [Required]
+        [MinLength(1)]
+        [MaxLength(1024)]
+        public double Diagonal { get; set; } = 24;
+    }
+
+    private double displayXFt;
+    private double displayYFt;
+    private double ppi = 0;
+    private string appleScale;
+    private string windowsScale;
+
+    private void CalculateScaleFactor(DisplayInfo info)
+    {
+        var result = CalculateDisplaySize(info.PixelX, info.PixelY, info.Diagonal);
+        Console.WriteLine($"Display width: {result.Item1} ft");
+        Console.WriteLine($"Display height: {result.Item2} ft");
+
+        displayXFt = result.Item1;
+        displayYFt = result.Item2;
+
+        var ppi = CalculatePPI(info.PixelX, info.PixelY, info.Diagonal);
+        Console.WriteLine($"Display PPI: {ppi}");
+        Console.WriteLine($"Suggested scale: {Math.Round(ppi / 96, 2) * 100}% (Windows & Linux)");
+        Console.WriteLine($"Suggested scale: {Math.Round(ppi / 72, 2) * 100}% (Apple)");
+
+        this.ppi = ppi;
+        appleScale = $"{Math.Round(ppi / 72, 2) * 100}%";
+        windowsScale = $"{Math.Round(ppi / 96, 2) * 100}%";
+    }
+
+    private static Tuple<double, double> CalculateDisplaySize(int x, int y, double diagonal)
+    {
+        double aspectRatio = Math.Sqrt(x * x + y * y);
+        double height = y * diagonal / aspectRatio;
+        double width = x * diagonal / aspectRatio;
+        return Tuple.Create(Math.Round(width, 2), Math.Round(height, 2));
+    }
+
+    private static double CalculatePPI(int x, int y, double diagonal)
+    {
+        double resolution = Math.Sqrt(x * x + y * y);
+        double ppi = resolution / diagonal;
+        return Math.Round(ppi, 2);
+    }
+}
