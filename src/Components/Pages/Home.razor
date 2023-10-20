@@ -1,28 +1,67 @@
 ﻿@page "/"
 @using System.ComponentModel.DataAnnotations
 
-TODO
+<style>
+    fluent-card {
+        padding: 20px;
+    }
+
+    .w100 {
+        width: 100%;
+    }
+
+    .calc-result {
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #F2F2F2;
+        width: 100%;
+    }
+</style>
+
+<FluentCard Style="max-width: 400px;">
+    <EditForm Model="DisplayInfo" OnValidSubmit="CalculateScaleFactor">
+        <DataAnnotationsValidator />
+        <FluentValidationSummary />
+
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentNumberField Class="w100" @bind-Value="DisplayInfo.PixelX" Required>
+                Resolution width (pixel)
+            </FluentNumberField>
+            <FluentNumberField Class="w100" @bind-Value="DisplayInfo.PixelY" Required>
+                Resolution height (pixel)
+            </FluentNumberField>
+            <FluentNumberField Class="w100" @bind-Value="DisplayInfo.Diagonal" Required>
+                Screen size (inch)
+            </FluentNumberField>
+
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit">Calculate
+            </FluentButton>
+
+            @if (hasResult)
+            {
+                <div class="calc-result">
+                    Display width: @displayXFt ft <br/>
+                    Display height: @displayYFt ft <br/>
+                    Display PPI: @ppi <br/>
+                    Suggested scale: @windowsScale (Windows & Linux) <br/>
+                    Suggested scale: @appleScale (Apple) 
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <FluentMessageBar Intent="@MessageIntent.Error">
+                    @errorMessage
+                </FluentMessageBar>
+            }
+        </FluentStack>
+    </EditForm>
+</FluentCard>
 
 @code {
     // 自主研发 https://anduin.aiursoft.cn/post/2023/10/11/select-display
 
-    class DisplayInfo
-    {
-        [Required]
-        [MinLength(800)]
-        [MaxLength(10240)]
-        public int PixelX { get; set; } = 1920;
-
-        [Required]
-        [MinLength(600)]
-        [MaxLength(20480)]
-        public int PixelY { get; set; } = 1080;
-
-        [Required]
-        [MinLength(1)]
-        [MaxLength(1024)]
-        public double Diagonal { get; set; } = 24;
-    }
+    private DisplayInfo DisplayInfo { get; set; }
 
     private double displayXFt;
     private double displayYFt;
@@ -30,23 +69,45 @@ TODO
     private string appleScale;
     private string windowsScale;
 
-    private void CalculateScaleFactor(DisplayInfo info)
+    private bool hasResult;
+    private string errorMessage;
+
+    public Home()
     {
-        var result = CalculateDisplaySize(info.PixelX, info.PixelY, info.Diagonal);
-        Console.WriteLine($"Display width: {result.Item1} ft");
-        Console.WriteLine($"Display height: {result.Item2} ft");
+        DisplayInfo = new();
+    }
 
-        displayXFt = result.Item1;
-        displayYFt = result.Item2;
+    private void CalculateScaleFactor()
+    {
+        hasResult = false;
+        errorMessage = null;
 
-        var ppi = CalculatePPI(info.PixelX, info.PixelY, info.Diagonal);
-        Console.WriteLine($"Display PPI: {ppi}");
-        Console.WriteLine($"Suggested scale: {Math.Round(ppi / 96, 2) * 100}% (Windows & Linux)");
-        Console.WriteLine($"Suggested scale: {Math.Round(ppi / 72, 2) * 100}% (Apple)");
+        try
+        {
 
-        this.ppi = ppi;
-        appleScale = $"{Math.Round(ppi / 72, 2) * 100}%";
-        windowsScale = $"{Math.Round(ppi / 96, 2) * 100}%";
+            var result = CalculateDisplaySize(DisplayInfo.PixelX, DisplayInfo.PixelY, DisplayInfo.Diagonal);
+            Console.WriteLine($"Display width: {result.Item1} ft");
+            Console.WriteLine($"Display height: {result.Item2} ft");
+
+            displayXFt = result.Item1;
+            displayYFt = result.Item2;
+
+            var ppi = CalculatePPI(DisplayInfo.PixelX, DisplayInfo.PixelY, DisplayInfo.Diagonal);
+            Console.WriteLine($"Display PPI: {ppi}");
+            Console.WriteLine($"Suggested scale: {Math.Round(ppi / 96, 2) * 100}% (Windows & Linux)");
+            Console.WriteLine($"Suggested scale: {Math.Round(ppi / 72, 2) * 100}% (Apple)");
+
+            this.ppi = ppi;
+            appleScale = $"{Math.Round(ppi / 72, 2) * 100}%";
+            windowsScale = $"{Math.Round(ppi / 96, 2) * 100}%";
+
+            hasResult = true;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            hasResult = false;
+        }
     }
 
     private static Tuple<double, double> CalculateDisplaySize(int x, int y, double diagonal)
