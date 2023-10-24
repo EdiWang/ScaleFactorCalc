@@ -2,8 +2,7 @@ body {
     background: #F2F2F2;
 }
 
-/* https://github.com/microsoft/fluentui-blazor/issues/865 */
-.validation-mesage {
+.validation-message {
     color: red;
 }
 
