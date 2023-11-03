@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Fast.Components.FluentUI;
+using Microsoft.FluentUI.AspNetCore.Components;
 using ScaleFactorCalc.Components;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
